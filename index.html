@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chromebooks Suck — Home</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+:root{
+  --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#7dd3fc;
+  --glass: rgba(255,255,255,0.04);
+}
+*{box-sizing:border-box}
+html,body{height:100%;}
+body{
+  margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto;
+  background: linear-gradient(180deg,#071022 0%, #081427 60%);
+  color: #e6eef6; display:flex;align-items:center;justify-content:center;padding:32px;
+}
+.card{
+  width:980px; max-width:96vw;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:16px; padding:28px;
+  box-shadow:0 10px 30px rgba(2,6,23,0.6);
+  border:1px solid rgba(255,255,255,0.03);
+  display:grid; gap:24px;
+}
+h1{margin:0 0 8px 0; font-size:28px}
+.slogan{font-weight:600;color:var(--accent);margin-bottom:14px}
+.timebox{background:var(--glass); padding:18px; border-radius:12px;}
+.time{font-size:54px;font-weight:700;}
+.date{margin-top:6px;color:var(--muted);font-size:16px;}
+.controls{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.control{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.02); padding:10px 12px;border-radius:10px;
+}
+.btn{
+  padding:10px 12px;border-radius:9px;
+  background:rgba(125,211,252,0.12);
+  border:1px solid rgba(125,211,252,0.14);
+  color:var(--accent); cursor:pointer;
+}
+.small{font-size:13px}
+footer{margin-top:10px;color:var(--muted);font-size:13px;}
+@media (max-width:760px){.card{grid-template-columns:1fr;}}
+.btn:hover, .control:hover, .timebox:hover{
+  transform: translateY(-2px); transition: all .2s ease;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+@media (hover: none){
+  .btn:active, .control:active, .timebox:active{
+    transform: scale(.97); box-shadow: none;
+  }
+}
+.btn, .control, .timebox{transition: all .25s ease;}
+</style>
+</head>
+<body>
+
+<main class="card">
+  <h1>Chromebooks Suck</h1>
+  <div class="slogan">We are exploiters bum bum bum bum bum</div>
+
+  <!-- Time -->
+  <div class="timebox" aria-live="polite">
+    <div id="time" class="time">--:--:--</div>
+    <div id="date" class="date">Loading date...</div>
+  </div>
+
+  <!-- Weather -->
+  <div class="timebox">
+    <strong>Weather:</strong>
+    <div id="weatherText">Getting weather...</div>
+    <div id="weatherEmoji" style="font-size:2rem;">🌤️</div>
+  </div>
+
+  <!-- Battery -->
+  <div class="timebox">
+    <strong>Battery Status:</strong>
+    <div id="batteryText">Loading battery info...</div>
+  </div>
+
+  <!-- Quote -->
+  <div class="timebox">
+    <div id="quoteBox"></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <label class="control small">
+      <i class="fa-solid fa-clock"></i>
+      <input id="military" type="checkbox" /> 24h Time
+    </label>
+
+    <label class="control small">
+      <i class="fa-regular fa-eye-slash"></i>
+      <input id="hideSeconds" type="checkbox" /> Hide Seconds
+    </label>
+
+    <button id="clearBtn" class="btn small">Clear Saved Settings</button>
+  </div>
+
+  <footer>Happy Thanksgiving</footer>
+</main>
+
+<script>
+// --- Clock ---
+function two(n){ return (n<10?"0":"")+n; }
+const elTime=document.getElementById("time");
+const elDate=document.getElementById("date");
+const chkMilitary=document.getElementById("military");
+const chkHideSeconds=document.getElementById("hideSeconds");
+
+function formatTime(d){
+  let h=d.getHours(); const m=two(d.getMinutes()); const s=two(d.getSeconds());
+  let ampm=""; if(!chkMilitary.checked){ampm=h>=12?" PM":" AM"; h=h%12||12;}
+  return chkMilitary.checked?`${two(h)}:${m}${chkHideSeconds.checked?"":":"+s}${ampm}`:`${h}:${m}${chkHideSeconds.checked?"":":"+s}${ampm}`;
+}
+function formatDate(d){const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;}
+function tick(){const now=new Date(); elTime.textContent=formatTime(now); elDate.textContent=formatDate(now);}
+setInterval(tick,1000); tick();
+
+// --- Quotes ---
+const quotes=[
+  "Chromebooks run on hopes and duct tape.",
+  "If lag was a sport, Chromebooks would win gold.",
+  "Chromebooks: Because suffering builds character.",
+  "Powered by sadness and weak processors."
+];
+document.getElementById("quoteBox").textContent=quotes[Math.floor(Math.random()*quotes.length)];
+
+// --- Weather (Alton NH example) ---
+$(document).ready(function(){
+  const loc={lat:43.4537,lon:-71.2137};
+  function getWeather(lat,lon){
+    $.ajax({
+      url:`https://api.weather.gov/points/${lat},${lon}`,
+      success:function(data){
+        $.ajax({
+          url:data.properties.forecast,
+          success:function(forecastData){
+            const f=forecastData.properties.periods[0];
+            $("#weatherText").text(f.temperature+"°"+f.temperatureUnit+" — "+f.shortForecast);
+            let emoji="☁️";
+            if(/sunny/i.test(f.shortForecast)) emoji="☀️";
+            else if(/rain/i.test(f.shortForecast)) emoji="🌧️";
+            else if(/snow/i.test(f.shortForecast)) emoji="❄️";
+            else if(/storm|thunder/i.test(f.shortForecast)) emoji="⛈️";
+            else if(/cloud/i.test(f.shortForecast)) emoji="☁️";
+            else if(/clear/i.test(f.shortForecast)) emoji="🌞";
+            $("#weatherEmoji").text(emoji);
+          }, error:()=>$("#weatherText").text("Error loading forecast 😢")
+        });
+      }, error:()=>$("#weatherText").text("Weather unavailable 😕")
+    });
+  }
+  getWeather(loc.lat,loc.lon);
+  setInterval(()=>getWeather(loc.lat,loc.lon),600000);
+});
+
+// --- Battery ---
+async function loadBattery(){
+  const el=document.getElementById("batteryText");
+  if(!navigator.getBattery){el.textContent="Battery info not supported.";return;}
+  try{
+    const battery=await navigator.getBattery();
+    function update(){el.textContent=`Battery: ${Math.round(battery.level*100)}% — ${battery.charging?"Charging":"Not Charging"}`;}
+    update();
+    battery.onlevelchange=update;
+    battery.onchargingchange=update;
+  } catch{el.textContent="Error reading battery.";}
+}
+loadBattery();
+
+// --- Preferences ---
+function setCookie(n,v){document.cookie=n+"="+v+"; path=/; max-age=31536000";}
+function getCookie(n){return(document.cookie.match('(^|;) ?'+n+'=([^;]*)(;|$)')||[,''])[2];}
+chkMilitary.checked=getCookie("use24")==="1";
+chkHideSeconds.checked=getCookie("hideS")==="1";
+chkMilitary.onchange=()=>setCookie("use24",chkMilitary.checked?"1":"0");
+chkHideSeconds.onchange=()=>setCookie("hideS",chkHideSeconds.checked?"1":"0");
+document.getElementById("clearBtn").onclick=()=>{
+  setCookie("use24","0"); setCookie("hideS","0"); location.reload();
+};
+</script>
+
+</body>
+</html>
